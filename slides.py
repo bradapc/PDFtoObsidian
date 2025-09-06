@@ -3,6 +3,7 @@ from tkinter import filedialog as fd
 import tkinter as tk
 import os
 from pathlib import Path
+from natsort import natsorted
 
 def convert_pdf_to_png(pdf_path):
     try:
@@ -19,14 +20,14 @@ def convert_pdf_to_png(pdf_path):
 
 def output_obsidian_markdown(slides_path, pdf_name):
     try:
-        slides = sorted(os.listdir(slides_path))
+        slides = natsorted(os.listdir(slides_path))
         initial_path = Path(slides_path)
         output_path = initial_path.parent / f"{pdf_name}.md"
-        output_file = open(output_path, "a")
+        output_file = open(output_path, "w")
         print(f"Created output file {pdf_name}.md")
         for slide in slides:
             if slide.endswith(".png") or slide.endswith(".jpg"):
-                output_file.write(f"![[{slides_path}/{slide}]]\n\n- Notes:\n\n---\n")
+                output_file.write(f"![[{Path(slides_path).name}/{slide}]]\n\n- Notes:\n\n---\n")
         print(f"Output finished. Please use the {pdf_name}.md file for your notes")
     except Exception as e:
         print(f"Error reading and outputting markdown {e}")
@@ -37,13 +38,15 @@ def main():
     file_path = fd.askopenfilename(
         title="Select a PDF",
     )
+    root.destroy()
+    
     if file_path:
         if (not file_path.endswith(".pdf")):
             print("File must be a PDF. Aborting...")
             exit(1)
-        file_name = os.path.basename(file_path)
-        markdown_name = file_name.split(".")[0]
-        file_path = file_path.split(".")[0]
+        file_path = Path(file_path)
+        markdown_name = file_path.stem
+        file_path = str(file_path.with_suffix(""))
         print(f"The name of your markdown file will be {markdown_name}")
         user_input = input("Press <Enter> to confirm or enter a new name: ")
         markdown_name = markdown_name if not user_input else user_input
